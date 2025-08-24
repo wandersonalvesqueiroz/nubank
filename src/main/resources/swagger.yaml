@@ -1,0 +1,106 @@
+openapi: 3.0.3
+info:
+  title: API de Ganho de Capital
+  description: Calcula o imposto sobre operações de compra e venda de ações.
+  version: 1.0.0
+
+servers:
+  - url: http://localhost:8080
+    description: Servidor local de desenvolvimento
+
+paths:
+  /capital-gains:
+    post:
+      summary: Calcula o imposto sobre operações agrupadas
+      description: Recebe uma lista de grupos de operações e retorna os impostos calculados por grupo.
+      tags:
+        - Capital Gains
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                type: array
+                items:
+                  $ref: '#/components/schemas/OperationDTO'
+      responses:
+        '200':
+          description: Lista de listas de impostos calculados por grupo
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/TaxResultDTO'
+        '400':
+          description: Requisição inválida
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseBase'
+        '500':
+          description: Erro interno no servidor
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseBase'
+
+components:
+  schemas:
+    OperationDTO:
+      type: object
+      required:
+        - operation
+        - quantity
+        - unit-cost
+      properties:
+        operation:
+          $ref: '#/components/schemas/OperationType'
+        quantity:
+          type: integer
+          example: 100
+          description: Quantidade de ações
+        unit-cost:
+          type: number
+          format: double
+          example: 5.00
+          description: Valor unitário da ação
+
+    OperationType:
+      type: string
+      enum: [ buy, sell ]
+      example: buy
+      description: Tipo da operação buy(Compra) e sell(Venda)
+
+    TaxResultDTO:
+      type: object
+      properties:
+        tax:
+          type: number
+          format: double
+          example: 0.00
+          description: Valor do imposto calculado
+
+    ErrorResponseBase:
+      type: object
+      properties:
+        timestamp:
+          type: string
+          format: date-time
+          example: "2025-08-23T14:36:00"
+        status:
+          type: integer
+          example: 400
+        error:
+          type: string
+          example: "Operação inválida"
+        message:
+          type: string
+          example: "Quantidade não pode ser negativa"
+        path:
+          type: string
+          example: "/capital-gains"
